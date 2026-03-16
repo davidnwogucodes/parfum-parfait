@@ -29,16 +29,7 @@ body {
 }
 
 /*header section*/
-.sub_page .brand_box {
-  position: relative;
-  background-image: url(/slider-img.jpg);
-  padding: 45px 0;
-}
-
-.sub_page .nav_section {
-  margin-top: 0;
-  background-color: #252525;
-}
+/* simplified sub-page hero (shop/about/etc.) uses custom hero like home */
 
 .brand_box {
   position: absolute;
@@ -140,6 +131,86 @@ a:focus {
 }
 
 /* end slider section */
+
+/* hero overlay */
+.hero_area {
+  position: relative;
+}
+
+.slider_section .hero_overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  padding: 20px 40px;
+  color: #ffffff;
+}
+
+.hero_overlay_content {
+  text-align: center;
+  max-width: 640px;
+  margin: 80px auto 40px;
+}
+
+.hero_overlay_content h1 {
+  font-size: 3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 10px;
+}
+
+.hero_overlay_content p {
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+}
+
+.hero_overlay_btn {
+  display: inline-block;
+  padding: 10px 44px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.hero_overlay_btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.hero_overlay_nav .nav_section {
+  margin-top: 0;
+}
+
+.hero_overlay_nav .nav_section .custom_nav2 .custom_nav-container {
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.shop_hero_image img {
+  width: 100%;
+  height: 260px;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
 .nav_section {
   margin-top: -32px;
 }

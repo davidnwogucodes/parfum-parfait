@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
 
-const CATEGORIES = ['all', 'men', 'women', 'unisex'];
+const CATEGORIES = ['all', 'retail', 'wholesale'];
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
@@ -33,14 +33,21 @@ export default function ShopPage() {
   return (
     <>
       <div className="hero_area sub_page">
-        <div className="brand_box">
-          <a className="navbar-brand" href="/">
-            <span>Parfum-Parfait</span>
-          </a>
-        </div>
+        <section className="slider_section position-relative">
+          <div className="shop_hero_image">
+            <img src="/hh.png" alt="Parfum-Parfait Shop" />
+          </div>
+          <div className="hero_overlay">
+            <div className="hero_overlay_nav">
+              <Navbar />
+            </div>
+            <div className="hero_overlay_content">
+              <h1>Our Fragrances</h1>
+              <p>Explore Parfum-Parfait collections for every occasion.</p>
+            </div>
+          </div>
+        </section>
       </div>
-
-      <Navbar />
 
       <section className="fruit_section layout_padding">
         <div className="container">

@@ -19,18 +19,13 @@ export default function HomePage() {
     <>
       {/* Hero */}
       <div className="hero_area">
-        <div className="brand_box">
-          <a className="navbar-brand" href="/">
-            <span>Parfum-Parfait</span>
-          </a>
-        </div>
         <section className="slider_section position-relative">
           <div id="carouselHero" className="carousel slide" data-bs-ride="carousel">
             <div className="carousel-inner">
               {[0, 1, 2].map((i) => (
                 <div key={i} className={i === 0 ? 'carousel-item active' : 'carousel-item'}>
                   <div className="img-box">
-                    <img src="/slider-img.jpg" alt="Parfum-Parfait" />
+                    <img src="/hh.png" alt="Parfum-Parfait" />
                   </div>
                 </div>
               ))}
@@ -42,10 +37,20 @@ export default function HomePage() {
               <span className="sr-only">Next</span>
             </button>
           </div>
+          <div className="hero_overlay">
+            <div className="hero_overlay_nav">
+              <Navbar />
+            </div>
+            <div className="hero_overlay_content">
+              <h1>Parfum-Parfait</h1>
+              <p>Discover the finest fragrances, crafted to leave a lasting impression.</p>
+              <Link href="/shop" className="hero_overlay_btn">
+                Shop Now
+              </Link>
+            </div>
+          </div>
         </section>
       </div>
-
-      <Navbar />
 
       <section className="shop_section layout_padding">
         <div className="container">

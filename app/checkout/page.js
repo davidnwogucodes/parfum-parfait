@@ -6,8 +6,7 @@ import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { getCloudinaryUrl } from '@/lib/cloudinary';
 
-const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbx90KVmZw0yinE-XMUkllHEmh7t_jp3Yd9hsESFbqpEVSmZnnGRxWa0t96Hxt-nB6ij/exec';
+const APPS_SCRIPT_URL = null; // Handled server-side via /api/products POST
 
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
@@ -27,23 +26,29 @@ export default function CheckoutPage() {
     setStatus(null);
 
     const orderData = {
+      // Keys must match Google Sheet column headers (lowercased)
       timestamp: new Date().toISOString(),
-      customer_name: form.customer_name,
+      'customer name': form.customer_name,
       phone: form.phone,
       address: form.address,
-      items: JSON.stringify(
-        cart.map((i) => `${i.name} x${i.qty}`)
-      ),
-      total_price: totalPrice.toFixed(2),
+      items: cart.map((i) => `${i.name} x${i.qty}`),
+      quantity: cart.reduce((sum, i) => sum + i.qty, 0),
+      discount: 0,
+      total: totalPrice.toFixed(2),
+      'payment status': 'Pending',
+      'shipping method': 'Standard',
+      amount: totalPrice.toFixed(2),
     };
 
     try {
-      await fetch(APPS_SCRIPT_URL, {
+      const res = await fetch('/api/products', {
         method: 'POST',
-        mode: 'no-cors', // GAS doesn't set CORS headers by default
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
       });
+
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
 
       clearCart();
       setStatus('success');
