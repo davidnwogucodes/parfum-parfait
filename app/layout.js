@@ -3,6 +3,7 @@ import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import Footer from '@/components/Footer';
 import BootstrapClient from '@/components/BootstrapClient';
+import RouteLoader from '@/components/RouteLoader';
 
 export const metadata = {
   title: 'Parfum-Parfait',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <BootstrapClient />
+        <RouteLoader />
         <CartProvider>
           {children}
           <Footer />

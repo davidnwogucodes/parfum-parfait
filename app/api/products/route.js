@@ -3,22 +3,40 @@ import { NextResponse } from 'next/server';
 const JSONBIN_API_KEY = '$2a$10$c0bLQOqmsEryYQo08I55qOkwPLpAqQguVwG..Q95rNnYWPcLQukAK';
 const JSONBIN_BIN_ID = '69b7cb91b7ec241ddc71d73e';
 
-export async function GET() {
-  try {
-    const res = await fetch(
-      `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`,
-      {
+let lastRecordCache = null;
+let lastRecordCacheAt = 0;
+
+async function fetchJsonbinLatest({ timeoutMs = 7000, retries = 2 } = {}) {
+  const url = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
         headers: { 'X-Master-Key': JSONBIN_API_KEY },
         cache: 'no-store',
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error(`JSONBin responded with ${res.status}`);
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`JSONBin responded with ${res.status}`);
+      const data = await res.json();
+      const record = data?.record ?? {};
+      lastRecordCache = record;
+      lastRecordCacheAt = Date.now();
+      return { record, stale: false };
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
+    } finally {
+      clearTimeout(t);
     }
+  }
+}
 
-    const data = await res.json();
-    const products = data?.record?.products ?? data?.record ?? [];
+export async function GET() {
+  try {
+    const { record } = await fetchJsonbinLatest();
+    const products = record?.products ?? record ?? [];
 
     return NextResponse.json(
       { products },
@@ -26,6 +44,13 @@ export async function GET() {
     );
   } catch (err) {
     console.error('Failed to fetch products:', err);
+    if (lastRecordCache) {
+      const products = lastRecordCache?.products ?? lastRecordCache ?? [];
+      return NextResponse.json(
+        { products, stale: true, staleAgeMs: Date.now() - lastRecordCacheAt },
+        { headers: { 'Cache-Control': 'no-store, max-age=0', 'X-Data-Stale': '1' } }
+      );
+    }
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 502 });
   }
 }
@@ -36,20 +61,7 @@ export async function POST(request) {
     const orderData = await request.json();
 
     // 1) Get the latest record
-    const latestRes = await fetch(
-      `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`,
-      {
-        headers: { 'X-Master-Key': JSONBIN_API_KEY },
-        cache: 'no-store',
-      }
-    );
-
-    if (!latestRes.ok) {
-      throw new Error(`JSONBin (read) responded with ${latestRes.status}`);
-    }
-
-    const latestJson = await latestRes.json();
-    const currentRecord = latestJson?.record ?? {};
+    const { record: currentRecord } = await fetchJsonbinLatest({ timeoutMs: 9000, retries: 2 });
 
     // 2) Append the new order to an "orders" array on the record
     const existingOrders = Array.isArray(currentRecord.orders)

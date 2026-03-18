@@ -252,7 +252,7 @@ export default function AdminProductsPage() {
       }
 
       if (isEditing) {
-        setProducts((prev) => prev.map((p) => (p.id === activeId ? data.product : p)));
+        setProducts((prev) => prev.map((p) => (String(p.id) === String(activeId) ? data.product : p)));
         setMessage({ type: 'success', text: 'Product updated successfully.' });
       } else {
         setProducts((prev) => [data.product, ...prev]);
@@ -572,6 +572,7 @@ export default function AdminProductsPage() {
                     <th>Category</th>
                     <th>Price</th>
                     <th>Stock</th>
+                    <th>Best seller</th>
                     <th style={{ width: 220 }}>Actions</th>
                   </tr>
                 </thead>
@@ -591,6 +592,31 @@ export default function AdminProductsPage() {
                       <td style={{ textTransform: 'capitalize' }}>{p.category || '-'}</td>
                       <td>${Number(p.price || 0).toFixed(2)}</td>
                       <td>{p.stock ?? 0}</td>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={p.bestSeller === true}
+                          onChange={async (e) => {
+                            const next = e.target.checked;
+                            try {
+                              const res = await fetch('/api/admin/products', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: p.id, bestSeller: next }),
+                              });
+                              const data = await res.json();
+                              if (res.status === 401) {
+                                router.push('/admin/login');
+                                return;
+                              }
+                              if (!res.ok || !data.success) throw new Error(data.error || 'Update failed');
+                              setProducts((prev) => prev.map((x) => (String(x.id) === String(p.id) ? data.product : x)));
+                            } catch (err) {
+                              setMessage({ type: 'error', text: err.message });
+                            }
+                          }}
+                        />
+                      </td>
                       <td>
                         <button
                           type="button"

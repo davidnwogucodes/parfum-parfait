@@ -7,11 +7,39 @@ import ProductCard from '@/components/ProductCard';
 
 export default function HomePage() {
   const [featured, setFeatured] = useState([]);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [allProducts, setAllProducts] = useState([]);
+  const [selectedAccord, setSelectedAccord] = useState('');
+  const [accordOptions, setAccordOptions] = useState([]);
 
   useEffect(() => {
+    setFeaturedLoading(true);
     fetch('/api/products')
       .then((r) => r.json())
-      .then((data) => setFeatured((data.products || []).slice(0, 6)))
+      .then((data) => {
+        const products = Array.isArray(data.products) ? data.products : [];
+        setAllProducts(products);
+        setFeatured(products.slice(0, 6));
+
+        const labels = new Set();
+        for (const p of products) {
+          const accords = Array.isArray(p?.accords) ? p.accords : [];
+          for (const a of accords) {
+            const label = String(a?.label || '').trim();
+            if (label) labels.add(label);
+          }
+        }
+        setAccordOptions(Array.from(labels).sort((a, b) => a.localeCompare(b)));
+      })
+      .catch(() => {})
+      .finally(() => setFeaturedLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/best-sellers')
+      .then((r) => r.json())
+      .then((data) => setBestSellers((data.products || []).slice(0, 6)))
       .catch(() => {});
   }, []);
 
@@ -42,8 +70,10 @@ export default function HomePage() {
               <Navbar />
             </div>
             <div className="hero_overlay_content">
-              <h1>Parfum-Parfait</h1>
-              <p>Discover the finest fragrances, crafted to leave a lasting impression.</p>
+              <h1 className="hero_glass_text">Parfum-Parfait</h1>
+              <p className="hero_glass_subtext">
+                Discover the finest fragrances, crafted to leave a lasting impression.
+              </p>
               <Link href="/shop" className="hero_overlay_btn">
                 Shop Now
               </Link>
@@ -52,42 +82,190 @@ export default function HomePage() {
         </section>
       </div>
 
-      <section className="shop_section layout_padding">
+      <section className="fruit_section layout_padding">
         <div className="container">
-          <div className="box">
-            <div className="detail-box">
-              <h2>Parfum-Parfait</h2>
-              <p>Discover the world finest fragrances, curated for you.</p>
-            </div>
-            <div className="img-box">
-              <img src="/shop-img.jpg" alt="Shop" />
-            </div>
-            <div className="btn-box">
-              <Link href="/shop">Shop Now</Link>
-            </div>
+          <div className="heading_container heading_container_full_underline">
+            <h2>Best Sellers</h2>
+            <hr />
           </div>
+        </div>
+        <div className="container-fluid">
+          <div className="fruit_container">
+            {bestSellers.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                enableModal={false}
+                showDetailsButton={false}
+                showAccordsInline={true}
+              />
+            ))}
+          </div>
+          {bestSellers.length === 0 && (
+            <p className="text-center py-2" style={{ color: '#888' }}>
+              No best sellers yet. Set them in Admin → Products.
+            </p>
+          )}
         </div>
       </section>
 
-      <section className="about_section">
+      <section className="about_section" id="find-my-taste">
         <div className="container-fluid">
           <div className="row">
-            <div className="col-md-6 px-0">
-              <div className="img-box">
-                <img src="/about-img.jpg" alt="About" />
-              </div>
-            </div>
-            <div className="col-md-5">
-              <div className="detail-box">
+            <div className="col-12">
+              <div
+                className="detail-box"
+                style={{
+                  maxWidth: 1100,
+                  margin: '0 auto',
+                  padding: '26px 18px',
+                }}
+              >
                 <div className="heading_container">
                   <hr />
-                  <h2>About Parfum-Parfait</h2>
+                  <h2>Find my taste</h2>
                 </div>
-                <p>
-                  We bring you an exquisite collection of the world most prestigious perfumes.
-                  From timeless classics to modern masterpieces, each fragrance tells a unique story.
+
+                <p style={{ marginBottom: 14, maxWidth: 820 }}>
+                  Choose an accord you love (sweet, woody, musky…) and we’ll instantly recommend perfumes that match your vibe.
                 </p>
-                <Link href="/about">Read More</Link>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 12,
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <select
+                    value={selectedAccord}
+                    onChange={(e) => setSelectedAccord(e.target.value)}
+                    style={{
+                      minWidth: 260,
+                      padding: '10px 12px',
+                      borderRadius: 10,
+                      border: '1px solid rgba(0,0,0,0.22)',
+                      background: '#fff',
+                    }}
+                    aria-label="Choose an accord"
+                  >
+                    <option value="">Pick an accord…</option>
+                    {(accordOptions.length ? accordOptions : ['sweet', 'woody', 'floral', 'fresh', 'musky', 'vanilla']).map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAccord('')}
+                    disabled={!selectedAccord}
+                    className="pp_glass_btn"
+                    aria-disabled={!selectedAccord}
+                  >
+                    Clear
+                  </button>
+
+                  <Link
+                    href="/shop"
+                    className="pp_glass_btn"
+                  >
+                    Browse all
+                  </Link>
+                </div>
+
+                <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {(accordOptions.length ? accordOptions.slice(0, 10) : ['sweet', 'woody', 'floral', 'fresh', 'musky', 'vanilla', 'citrus', 'amber'])
+                    .map((a) => {
+                      const active = String(selectedAccord).toLowerCase().trim() === String(a).toLowerCase().trim();
+                      return (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => setSelectedAccord(a)}
+                          className={`pp_glass_btn${active ? ' pp_glass_btn_dark' : ''}`}
+                          aria-pressed={active}
+                        >
+                          {String(a).toLowerCase()}
+                        </button>
+                      );
+                    })}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 18,
+                    padding: 14,
+                    borderRadius: 16,
+                    background: 'linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02))',
+                    border: '1px solid rgba(0,0,0,0.10)',
+                  }}
+                >
+                  {!selectedAccord ? (
+                    <div style={{ color: '#666' }}>
+                      Pick an accord to see recommendations.
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                        <div style={{ fontWeight: 900, letterSpacing: '0.04em' }}>
+                          Recommendations for <span style={{ textTransform: 'lowercase' }}>{selectedAccord}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: '#555' }}>
+                          Based on main accords you set in Admin
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: 12 }}>
+                        {(() => {
+                          const needle = String(selectedAccord).toLowerCase().trim();
+                          const scored = (Array.isArray(allProducts) ? allProducts : [])
+                            .map((p) => {
+                              const accords = Array.isArray(p?.accords) ? p.accords : [];
+                              const hit = accords.find((a) => String(a?.label || '').toLowerCase().trim() === needle);
+                              const score = hit ? Number(hit?.strength ?? 3) : 0;
+                              return { p, score };
+                            })
+                            .filter(({ score }) => score > 0)
+                            .sort((a, b) => b.score - a.score);
+
+                          const picks = scored.slice(0, 6).map(({ p }) => p);
+
+                          if (picks.length === 0) {
+                            return (
+                              <div style={{ color: '#666' }}>
+                                No matches yet for this accord. Try another one, or add accords to products in Admin → Products.
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                                gap: 12,
+                              }}
+                            >
+                              {picks.map((p) => (
+                                <div key={p.id} style={{ minWidth: 0 }}>
+                                  <ProductCard
+                                    product={p}
+                                    enableModal={false}
+                                    showDetailsButton={false}
+                                    showAccordsInline={true}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -103,7 +281,11 @@ export default function HomePage() {
         </div>
         <div className="container-fluid">
           <div className="fruit_container">
-            {featured.length > 0 ? (
+            {featuredLoading ? (
+              <p className="text-center py-5" style={{ color: '#888' }}>
+                Loading fragrances…
+              </p>
+            ) : featured.length > 0 ? (
               featured.map((p) => <ProductCard key={p.id} product={p} />)
             ) : (
               [

@@ -10,7 +10,7 @@ export default function Navbar() {
 
   const links = [
     { href: '/', label: 'Home' },
-    { href: '/about', label: 'About' },
+    { href: '/#find-my-taste', label: 'Find my taste' },
     { href: '/shop', label: 'Shop' },
     { href: '/contact', label: 'Contact Us' },
   ];
@@ -38,7 +38,6 @@ export default function Navbar() {
                     <li key={href} className={`nav-item${pathname === href ? ' active' : ''}`}>
                       <Link className="nav-link" href={href}>
                         {label}
-                        {pathname === href && <span className="sr-only">(current)</span>}
                       </Link>
                     </li>
                   ))}
