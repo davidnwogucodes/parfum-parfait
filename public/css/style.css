@@ -999,6 +999,23 @@ a:focus {
     --pp-card-img-h: 170px;
     --pp-card-info-min-h: 190px;
   }
+
+  /* When the mobile navbar is open, don't let the hero CTA overlay it */
+  .pp-mobile-nav-open .slider_section .hero_overlay_content {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Make the collapsed menu clearly above the hero overlay */
+  #navbarSupportedContent {
+    z-index: 100000;
+  }
+
+  #navbarSupportedContent.navbar-collapse {
+    background: rgba(37, 37, 37, 0.95);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
 }
 
 /* Parfum-Parfait loader (self-drawing line) */

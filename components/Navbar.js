@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useEffect } from 'react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -14,6 +15,22 @@ export default function Navbar() {
     { href: '/shop', label: 'Shop' },
     { href: '/contact', label: 'Contact Us' },
   ];
+
+  useEffect(() => {
+    const el = document.getElementById('navbarSupportedContent');
+    if (!el) return;
+
+    const onShown = () => document.body.classList.add('pp-mobile-nav-open');
+    const onHidden = () => document.body.classList.remove('pp-mobile-nav-open');
+
+    el.addEventListener('shown.bs.collapse', onShown);
+    el.addEventListener('hidden.bs.collapse', onHidden);
+
+    return () => {
+      el.removeEventListener('shown.bs.collapse', onShown);
+      el.removeEventListener('hidden.bs.collapse', onHidden);
+    };
+  }, []);
 
   return (
     <section className="nav_section">
