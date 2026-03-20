@@ -15,32 +15,24 @@ export default function Footer() {
               <div className="col-md-4">
                 <a href="#">
                   <img src="/location.png" alt="Location" />
-                  <span>Passages of Lorem Ipsum available</span>
+                  <span>Parkview Hotel Wuse Zone 1</span>
                 </a>
               </div>
               <div className="col-md-4">
-                <a href="tel:+012334567890">
+                <a href="tel:09041390497">
                   <img src="/call.png" alt="Phone" />
-                  <span>Call : +012334567890</span>
+                  <span>Call : 09041390497</span>
                 </a>
               </div>
               <div className="col-md-4">
-                <a href="mailto:contact@parfumparfait.com">
+                <a href="mailto:shopparfumparfait@gmail.com">
                   <img src="/mail.png" alt="Email" />
-                  <span>contact@parfumparfait.com</span>
+                  <span>shopparfumparfait@gmail.com</span>
                 </a>
               </div>
             </div>
           </div>
           <div className="row">
-            <div className="col-md-8 col-lg-9">
-              <div className="info_form">
-                <form onSubmit={(e) => e.preventDefault()}>
-                  <input type="email" placeholder="Enter your email" />
-                  <button type="submit">Subscribe</button>
-                </form>
-              </div>
-            </div>
             <div className="col-md-4 col-lg-3">
               <div className="info_social">
                 <div><a href="#"><img src="/facebook-logo-button.png" alt="Facebook" /></a></div>
