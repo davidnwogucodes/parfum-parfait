@@ -70,7 +70,9 @@ export default function HomePage() {
               <Navbar />
             </div>
             <div className="hero_overlay_content">
-              <h1 className="hero_glass_text">Parfum-Parfait</h1>
+              <h1 className="hero_glass_text" data-text="Parfum-Parfait">
+                Parfum-Parfait
+              </h1>
               <p className="hero_glass_subtext">
                 Discover the finest fragrances, crafted to leave a lasting impression.
               </p>

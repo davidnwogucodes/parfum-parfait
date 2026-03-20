@@ -56,7 +56,7 @@ export default function ProductCard({
   return (
     <>
       <div
-        className="box"
+        className="box pp_product_card"
         style={{
           position: 'relative',
           overflow: 'hidden',
@@ -68,7 +68,7 @@ export default function ProductCard({
       <img
         src={imgSrc}
         alt={name}
-        style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
+        style={{ width: '100%', height: 'var(--pp-card-img-h, 220px)', objectFit: 'cover', display: 'block' }}
         onError={(e) => { e.target.src = '/f-1.jpg'; }}
         onClick={enableModal ? () => setOpen(true) : undefined}
         role={enableModal ? 'button' : undefined}
@@ -89,7 +89,7 @@ export default function ProductCard({
           color: '#fff',
           display: 'flex',
           flexDirection: 'column',
-          minHeight: showAccordsInline ? 210 : undefined,
+          minHeight: showAccordsInline ? 'var(--pp-card-info-min-h, 210px)' : undefined,
         }}
       >
         <h5
