@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 function useRouteKey() {
   const pathname = usePathname();
-  const search = useSearchParams();
-  const qs = search ? search.toString() : '';
-  return useMemo(() => `${pathname}?${qs}`, [pathname, qs]);
+  // Key off pathname only so we avoid `useSearchParams()` suspense requirements.
+  return useMemo(() => `${pathname}`, [pathname]);
 }
 
 export default function RouteLoader({ minMs = 900, fadeMs = 220 }) {
