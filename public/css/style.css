@@ -954,6 +954,27 @@ a:focus {
 
 /* end footer section*/
 
+/* Product card sizing (image vs info panel) */
+.pp_product_card {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.14);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  --pp-card-img-h: 240px;
+  --pp-card-info-min-h: 170px;
+}
+
+.pp_product_card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.20);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.pp_product_info {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0 0 18px 18px;
+}
+
 @media (max-width: 767px) {
   .slider_section .hero_overlay {
     padding: 0;
@@ -996,8 +1017,13 @@ a:focus {
   }
 
   .pp_product_card {
-    --pp-card-img-h: 170px;
-    --pp-card-info-min-h: 190px;
+    border-radius: 14px;
+    --pp-card-img-h: 200px;
+    --pp-card-info-min-h: 140px;
+  }
+
+  .pp_product_info {
+    border-radius: 0 0 14px 14px;
   }
 
   /* When the mobile navbar is open, don't let the hero CTA overlay it */

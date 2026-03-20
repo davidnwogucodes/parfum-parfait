@@ -83,8 +83,9 @@ export default function ProductCard({
       />
       {/* Info always visible below image */}
       <div
+        className="pp_product_info"
         style={{
-          padding: '10px 12px 4px',
+          padding: '8px 10px 3px',
           background: '#252525',
           color: '#fff',
           display: 'flex',
@@ -219,7 +220,7 @@ export default function ProductCard({
           <button
             onClick={() => setOpen(true)}
             className="pp_glass_btn pp_glass_btn_dark"
-            style={{ width: '100%', marginBottom: 8, padding: '9px 0', textTransform: 'uppercase' }}
+            style={{ width: '100%', marginBottom: 6, padding: '7px 0', textTransform: 'uppercase', fontSize: 13 }}
           >
             Details
           </button>
@@ -227,7 +228,7 @@ export default function ProductCard({
         <button
           onClick={handleAdd}
           className={`pp_glass_btn pp_glass_btn_dark${added ? ' pp_glass_btn_success' : ''}`}
-          style={{ width: '100%', marginBottom: 8, padding: '9px 0', marginTop: showAccordsInline ? 'auto' : undefined }}
+          style={{ width: '100%', marginBottom: 6, padding: '7px 0', marginTop: showAccordsInline ? 'auto' : undefined, fontSize: 13 }}
         >
           {added ? '✓ Added!' : 'Add to Cart'}
         </button>
