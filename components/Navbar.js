@@ -19,7 +19,7 @@ export default function Navbar() {
     <section className="nav_section">
       <div className="container">
         <div className="custom_nav2">
-          <nav className="navbar navbar-expand custom_nav-container">
+          <nav className="navbar navbar-expand-lg custom_nav-container">
             <button
               className="navbar-toggler"
               type="button"
