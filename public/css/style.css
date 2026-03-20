@@ -956,20 +956,28 @@ a:focus {
 
 @media (max-width: 767px) {
   .slider_section .hero_overlay {
-    padding: 10px 14px;
+    padding: 0;
     justify-content: flex-start;
   }
 
   .hero_overlay_nav {
-    margin-bottom: -8px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 14px;
+    margin: 0;
   }
 
   .hero_overlay_content {
-    margin: 6px auto 18px;
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    transform: translate(-50%, -50%);
+    margin: 0;
     max-width: 92vw;
   }
 
-  /* Hide title + write-up on mobile, keep only CTA */
   .hero_glass_text {
     display: none;
   }
@@ -979,25 +987,12 @@ a:focus {
   }
 
   .hero_overlay_btn {
-    margin-top: 10px;
-  }
-
-  .hero_overlay_content h1 {
-    font-size: 2.2rem;
-    letter-spacing: 0.12em;
-  }
-
-  .hero_overlay_content p {
-    font-size: 1rem;
-    margin-bottom: 12px;
-  }
-
-  .hero_overlay_btn {
+    margin-top: 0;
     padding: 10px 34px;
   }
 
   .nav_section {
-    margin-top: -12px;
+    margin-top: 0;
   }
 
   .pp_product_card {
