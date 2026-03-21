@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getBinData, updateBinData } from '@/lib/jsonbin';
 import { getProfitLoss, getInventoryStatus, expensesByCategory, expensesByVendor } from '@/lib/business';
-import { askAI } from '@/lib/openrouter';
+import { askAI, resolveWithAI } from '@/lib/openrouter';
 import { uploadToCloudinary } from '@/lib/cloudinaryUpload';
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -94,6 +94,12 @@ function buildContext(data) {
       stock: p.stock,
       bestSeller: p.bestSeller ?? false,
       accords: Array.isArray(p.accords) ? p.accords.map((a) => a.label) : [],
+    })),
+
+    // Pending capability proposals awaiting owner approval
+    pendingCapabilities: (Array.isArray(data.pendingCapabilities) ? data.pendingCapabilities : []).map((c) => ({
+      name: c.name,
+      description: c.description,
     })),
   };
 }
@@ -292,8 +298,90 @@ function applyAction(actionName, params, data) {
       return { updatedData: { ...data, products }, message: `Image updated for "${products[idx].name}"` };
     }
 
+    // ─── Self-evolution actions ───────────────────────────────────────────────
+
+    case 'CREATE_ACTION': {
+      const existingCustom = Array.isArray(data.customActions) ? data.customActions : [];
+      if (existingCustom.find((a) => a.name === params.name)) {
+        return { updatedData: data, message: `Custom action "${params.name}" already exists`, error: true };
+      }
+      const newAction = {
+        name: params.name,
+        description: params.description,
+        when: params.when,
+        params: params.params ?? {},
+        handlerHint: params.handlerHint,
+        dataKey: params.dataKey,
+        createdAt: new Date().toISOString(),
+      };
+      return {
+        updatedData: { ...data, customActions: [...existingCustom, newAction] },
+        message: `🧠 New capability unlocked: "${params.name}" — ${params.description}`,
+      };
+    }
+
+    case 'PROPOSE_CAPABILITY': {
+      const existingPending = Array.isArray(data.pendingCapabilities) ? data.pendingCapabilities : [];
+      const proposal = { ...params, proposedAt: new Date().toISOString() };
+      return {
+        updatedData: { ...data, pendingCapabilities: [...existingPending, proposal] },
+        message: `💡 Proposed new capability: "${params.name}". Reply "yes, add it" to activate.`,
+      };
+    }
+
+    case 'APPROVE_CAPABILITY': {
+      const pendingCaps = Array.isArray(data.pendingCapabilities) ? data.pendingCapabilities : [];
+      const customCaps = Array.isArray(data.customActions) ? data.customActions : [];
+      const capIdx = pendingCaps.findIndex((c) => c.name === params.name);
+      if (capIdx === -1) return { updatedData: data, message: `No pending capability named "${params.name}"`, error: true };
+      const approved = { ...pendingCaps[capIdx], approvedAt: new Date().toISOString() };
+      const newPending = pendingCaps.filter((_, i) => i !== capIdx);
+      return {
+        updatedData: { ...data, customActions: [...customCaps, approved], pendingCapabilities: newPending },
+        message: `✅ "${params.name}" activated! I can now handle this going forward.`,
+      };
+    }
+
     default:
-      return { updatedData: data, message: `Unknown action: ${actionName}`, error: true };
+      // Signal that this action is unknown — parseAndApplyActions will attempt dynamic resolution
+      return { updatedData: data, message: `Unknown action: ${actionName}`, unknown: true };
+  }
+}
+
+/**
+ * Dynamically resolve an unknown action using the stored custom action schema.
+ * Calls the AI with a focused prompt to produce the updated data key.
+ */
+async function resolveUnknownAction(actionName, params, data, customActions) {
+  const schema = (customActions ?? []).find((a) => a.name === actionName);
+  if (!schema) {
+    return { updatedData: data, message: `No handler found for "${actionName}" — define it with CREATE_ACTION first`, error: true };
+  }
+
+  const dataKey = schema.dataKey;
+  const currentValue = Array.isArray(data[dataKey]) ? data[dataKey] : (data[dataKey] ?? []);
+
+  const resolverPrompt =
+    `You are a JSON data operator for a perfume store system.\n` +
+    `Action: ${actionName}\n` +
+    `Description: ${schema.description}\n` +
+    `Handler instructions: ${schema.handlerHint}\n` +
+    `Parameters provided: ${JSON.stringify(params)}\n` +
+    `Current value of data["${dataKey}"]: ${JSON.stringify(currentValue)}\n\n` +
+    `Apply the action and return ONLY the new JSON value for data["${dataKey}"]. ` +
+    `No explanations. No markdown fences. Raw JSON only.`;
+
+  try {
+    const raw = await resolveWithAI(resolverPrompt);
+    const cleaned = raw.replace(/```json\s*/g, '').replace(/```/g, '').trim();
+    const newValue = JSON.parse(cleaned);
+    return {
+      updatedData: { ...data, [dataKey]: newValue },
+      message: `${actionName} executed via dynamic handler`,
+    };
+  } catch (err) {
+    console.error(`Dynamic resolver error for ${actionName}:`, err.message);
+    return { updatedData: data, message: `Dynamic handler failed for "${actionName}": ${err.message}`, error: true };
   }
 }
 
@@ -301,7 +389,7 @@ function applyAction(actionName, params, data) {
  * Parse all <<ACTION_NAME:{...}>> markers from the AI reply,
  * apply them sequentially to the data, and return results.
  */
-function parseAndApplyActions(rawReply, data) {
+async function parseAndApplyActions(rawReply, data, customActions = []) {
   const ACTION_RE = /<<([A-Z_]+):(\{[\s\S]*?\})>>/g;
   const results = [];
   let currentData = data;
@@ -312,8 +400,15 @@ function parseAndApplyActions(rawReply, data) {
     try {
       const params = JSON.parse(paramsJson);
       const result = applyAction(actionName, params, currentData);
-      currentData = result.updatedData;
-      results.push({ actionName, message: result.message, error: result.error ?? false });
+      if (result.unknown) {
+        // Unknown built-in — attempt dynamic resolution via custom action schema
+        const dynResult = await resolveUnknownAction(actionName, params, currentData, customActions);
+        currentData = dynResult.updatedData;
+        results.push({ actionName, message: dynResult.message, error: dynResult.error ?? false });
+      } else {
+        currentData = result.updatedData;
+        results.push({ actionName, message: result.message, error: result.error ?? false });
+      }
     } catch (err) {
       results.push({ actionName, message: `Failed to parse action params: ${err.message}`, error: true });
     }
@@ -355,6 +450,7 @@ export async function POST(request) {
     let data = await getBinData();
     const history = getHistory(data, chatId);
     const context = buildContext(data);
+    const customActions = Array.isArray(data.customActions) ? data.customActions : [];
 
     // If a photo was recently uploaded, inject that context into the user's message
     const pendingImage = getPendingImage(data, chatId);
@@ -371,14 +467,14 @@ export async function POST(request) {
 
     let rawReply;
     try {
-      rawReply = await askAI(enrichedText, context, history);
+      rawReply = await askAI(enrichedText, context, history, customActions);
     } catch (aiErr) {
       console.error('AI call failed:', aiErr.message);
       await sendMessage(chatId, `⚠️ I'm having trouble reaching the AI right now — give it a few seconds and try again!`);
       return NextResponse.json({ ok: true });
     }
 
-    const { results, updatedData } = parseAndApplyActions(rawReply, data);
+    const { results, updatedData } = await parseAndApplyActions(rawReply, data, customActions);
     data = updatedData;
     data = saveToHistory(data, chatId, text, rawReply);
     await updateBinData(data);

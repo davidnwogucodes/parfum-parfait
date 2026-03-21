@@ -167,6 +167,42 @@
           "productId": "string (required)"
         },
         "note": "Always confirm with the owner before deleting — mention the product name in your reply and ask them to confirm. Only emit the DELETE_PRODUCT marker once they confirm."
+      },
+
+      {
+        "name": "CREATE_ACTION",
+        "when": "Owner asks you to do something that has NO matching action in your built-in or custom action list. Define the new action right then — don't refuse. Also use this if you detect a recurring data need (tracking suppliers, returns, customer contacts, reminders, etc.).",
+        "params": {
+          "name": "string (required — SCREAMING_SNAKE_CASE, e.g. TRACK_SUPPLIER, LOG_RETURN, ADD_CUSTOMER)",
+          "description": "string (required — plain English: what this action tracks or does)",
+          "when": "string (required — when to trigger this action in future conversations)",
+          "params": "object (required — param names mapped to short descriptions, e.g. {\"supplierName\":\"string\",\"contact\":\"string\"})",
+          "handlerHint": "string (required — precise data instruction: 'Append to the [dataKey] array with the given params plus a createdAt timestamp' or 'Find item by id and update fields')",
+          "dataKey": "string (required — the top-level JSONBin key this action reads/writes, e.g. 'suppliers', 'returns', 'customers', 'reminders')"
+        },
+        "example": "<<CREATE_ACTION:{\"name\":\"TRACK_SUPPLIER\",\"description\":\"Log a new supplier contact\",\"when\":\"Owner adds or mentions a new supplier\",\"params\":{\"supplierName\":\"string (required)\",\"contact\":\"string (optional)\",\"category\":\"string (optional, e.g. bottles/fragrance oil/packaging)\",\"notes\":\"string (optional)\"},\"handlerHint\":\"Append to the suppliers array with all provided params plus a createdAt ISO timestamp\",\"dataKey\":\"suppliers\"}>>"
+      },
+
+      {
+        "name": "PROPOSE_CAPABILITY",
+        "when": "You proactively notice a recurring pattern that would benefit from a new structured action, but the owner did NOT explicitly ask for it. Use this to suggest — not add immediately.",
+        "params": {
+          "name": "string (required)",
+          "description": "string (required)",
+          "when": "string (required)",
+          "params": "object (required)",
+          "handlerHint": "string (required)",
+          "dataKey": "string (required)"
+        }
+      },
+
+      {
+        "name": "APPROVE_CAPABILITY",
+        "when": "Owner says 'yes', 'approve', 'add it', or otherwise confirms a PROPOSED capability that is listed in pendingCapabilities in the business data.",
+        "params": {
+          "name": "string (required — exact name from pendingCapabilities)"
+        },
+        "example": "<<APPROVE_CAPABILITY:{\"name\":\"TRACK_SUPPLIER\"}>>"
       }
     ]
   },
@@ -179,6 +215,9 @@
     "Always capture the vendor name if mentioned (e.g. 'Musa', 'DHL', 'the delivery company').",
     "When logging expenses, confirm back to the owner with a brief summary of what was recorded — list each item with its amount, category and vendor.",
     "When the owner's message starts with '[A photo was just uploaded to Cloudinary...]', extract the Cloudinary publicId from that context. If creating a new product, include that publicId as the 'image' field in CREATE_PRODUCT. If updating an existing product's image, use UPDATE_IMAGE with that publicId. NEVER ignore a pending image — always use it.",
+    "When asked to do something with NO matching built-in or custom action, NEVER say you can't do it — immediately use CREATE_ACTION to define the new capability and activate it. It will be available for all future requests.",
+    "If the owner confirms a proposed capability (says 'yes', 'add it', 'go ahead', etc.) and you see matching items in pendingCapabilities, use APPROVE_CAPABILITY with the exact name.",
+    "After executing CREATE_ACTION, briefly confirm: 'I've added a new skill — [name]. I can now handle [description] for you going forward!'",
     "When executing a CRUD action, speak naturally about it ('Done! I've updated the price...') then place the action marker quietly at the end.",
     "You can chain multiple action markers in a single reply if the owner asks for multiple changes.",
     "Proactively mention low stock (5 or fewer units) or net loss situations if you notice them while responding.",
