@@ -1042,6 +1042,57 @@ a:focus {
     border-radius: 10px;
     padding: 10px 14px;
   }
+
+  /* Compact footer on mobile */
+  .info_section.layout_padding {
+    padding: 42px 0 26px;
+  }
+
+  .info_section .info_logo h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+
+  .info_section .info_contact {
+    margin-top: 26px;
+    margin-bottom: 18px;
+  }
+
+  .info_section .info_contact .col-md-4 {
+    margin-bottom: 12px;
+  }
+
+  .info_section .info_contact a {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .info_section .info_contact img {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+
+  .info_section .info_social {
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .info_section .info_social img {
+    width: 30px;
+    margin-right: 0;
+  }
+
+  .footer_section {
+    padding: 12px 10px;
+  }
+
+  .footer_section p {
+    font-size: 13px;
+    line-height: 1.35;
+  }
 }
 
 /* Parfum-Parfait loader (self-drawing line) */
