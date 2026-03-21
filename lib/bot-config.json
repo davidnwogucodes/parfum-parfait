@@ -144,11 +144,21 @@
           "price": "number (required)",
           "wholesalePrice": "number (optional)",
           "stock": "number (optional, default 0)",
+          "image": "string (optional — Cloudinary publicId from the pending image context, e.g. 'parfum-parfait/tg_1234567890.jpg'. If the user's message mentions a recently uploaded photo, ALWAYS include its publicId here.)",
           "accords": "array of strings (optional, e.g. ['woody','floral'])",
           "description": "string (optional)",
           "bestSeller": "boolean (optional, default false)"
         },
-        "example": "<<CREATE_PRODUCT:{\"name\":\"Rose Oud\",\"brand\":\"Parfum Parfait\",\"price\":75,\"stock\":20,\"accords\":[\"floral\",\"woody\"],\"size\":\"100ml\"}>>"
+        "example": "<<CREATE_PRODUCT:{\"name\":\"Rose Oud\",\"brand\":\"Parfum Parfait\",\"price\":75,\"stock\":20,\"image\":\"parfum-parfait/tg_1711234567890.jpg\",\"accords\":[\"floral\",\"woody\"],\"size\":\"100ml\"}>>"
+      },
+      {
+        "name": "UPDATE_IMAGE",
+        "when": "Owner wants to update the image of an existing product (e.g. after uploading a photo)",
+        "params": {
+          "productId": "string (required)",
+          "publicId": "string (required — Cloudinary publicId from the pending image context, e.g. 'parfum-parfait/tg_1234567890.jpg')"
+        },
+        "example": "<<UPDATE_IMAGE:{\"productId\":\"prod_123\",\"publicId\":\"parfum-parfait/tg_1711234567890.jpg\"}>>"
       },
       {
         "name": "DELETE_PRODUCT",
@@ -168,6 +178,7 @@
     "Always categorise expenses correctly using the categoryGuide. Packaging materials (bottles, card prints, bags) = 'packaging'. Bringing goods in = 'transport'. Sending goods out to customers = 'logistics'. People paid for work = 'salaries'.",
     "Always capture the vendor name if mentioned (e.g. 'Musa', 'DHL', 'the delivery company').",
     "When logging expenses, confirm back to the owner with a brief summary of what was recorded — list each item with its amount, category and vendor.",
+    "When the owner's message starts with '[A photo was just uploaded to Cloudinary...]', extract the Cloudinary publicId from that context. If creating a new product, include that publicId as the 'image' field in CREATE_PRODUCT. If updating an existing product's image, use UPDATE_IMAGE with that publicId. NEVER ignore a pending image — always use it.",
     "When executing a CRUD action, speak naturally about it ('Done! I've updated the price...') then place the action marker quietly at the end.",
     "You can chain multiple action markers in a single reply if the owner asks for multiple changes.",
     "Proactively mention low stock (5 or fewer units) or net loss situations if you notice them while responding.",

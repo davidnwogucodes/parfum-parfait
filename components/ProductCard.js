@@ -69,7 +69,7 @@ export default function ProductCard({
         src={imgSrc}
         alt={name}
         style={{ width: '100%', height: 'var(--pp-card-img-h, 220px)', objectFit: 'cover', display: 'block' }}
-        onError={(e) => { e.target.src = '/f-1.jpg'; }}
+        onError={(e) => { e.target.src = '/placeholder.svg'; }}
         onClick={enableModal ? () => setOpen(true) : undefined}
         role={enableModal ? 'button' : undefined}
         tabIndex={enableModal ? 0 : undefined}
@@ -295,7 +295,7 @@ export default function ProductCard({
                   src={imgSrc}
                   alt={name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', minHeight: 320 }}
-                  onError={(e) => { e.target.src = '/f-1.jpg'; }}
+                  onError={(e) => { e.target.src = '/placeholder.svg'; }}
                 />
               </div>
 
