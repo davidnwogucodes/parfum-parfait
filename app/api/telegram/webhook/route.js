@@ -3,7 +3,7 @@ import { getBinData, updateBinData } from '@/lib/jsonbin';
 import { getProfitLoss, getInventoryStatus, expensesByCategory } from '@/lib/business';
 import { askAI } from '@/lib/openrouter';
 
-const TELEGRAM_TOKEN = '8670234729:AAHNq2RYh55xJM29IqXoYA_ozGQboBVcob0';
+const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
 /** Max conversation turns to keep in memory per chat (each turn = 1 user + 1 assistant message). */
