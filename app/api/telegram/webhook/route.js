@@ -102,17 +102,34 @@ function buildContext(data) {
 
 function getHistory(data, chatId) {
   const conversations = data.botConversations ?? {};
-  return conversations[String(chatId)] ?? [];
+  return conversations[String(chatId)]?.history ?? [];
+}
+
+function getPendingImage(data, chatId) {
+  const conversations = data.botConversations ?? {};
+  return conversations[String(chatId)]?.pendingImage ?? null;
+}
+
+function savePendingImage(data, chatId, pendingImage) {
+  const conversations = data.botConversations ?? {};
+  const chatIdStr = String(chatId);
+  const existing = conversations[chatIdStr] ?? {};
+  return { ...data, botConversations: { ...conversations, [chatIdStr]: { ...existing, pendingImage } } };
+}
+
+function clearPendingImage(data, chatId) {
+  return savePendingImage(data, chatId, null);
 }
 
 /** Returns a new data object with the updated conversation history for this chat. */
 function saveToHistory(data, chatId, userMessage, rawAiReply) {
   const conversations = data.botConversations ?? {};
   const chatIdStr = String(chatId);
-  const history = [...(conversations[chatIdStr] ?? [])];
+  const existing = conversations[chatIdStr] ?? {};
+  const history = [...(existing.history ?? [])];
 
   history.push({ role: 'user', content: userMessage });
-  // Store the clean reply (without action markers) so the AI doesn't re-trigger actions
+  // Store clean reply (without action markers) so the AI doesn't re-trigger actions
   history.push({
     role: 'assistant',
     content: rawAiReply.replace(/<<[A-Z_]+:\{[\s\S]*?\}>>/g, '').trim(),
@@ -121,7 +138,7 @@ function saveToHistory(data, chatId, userMessage, rawAiReply) {
   // Keep only the last MAX_TURNS * 2 messages
   const trimmed = history.slice(-(MAX_TURNS * 2));
 
-  return { ...data, botConversations: { ...conversations, [chatIdStr]: trimmed } };
+  return { ...data, botConversations: { ...conversations, [chatIdStr]: { ...existing, history: trimmed } } };
 }
 
 // ─── CRUD action executor ─────────────────────────────────────────────────────
@@ -339,9 +356,22 @@ export async function POST(request) {
     const history = getHistory(data, chatId);
     const context = buildContext(data);
 
+    // If a photo was recently uploaded, inject that context into the user's message
+    const pendingImage = getPendingImage(data, chatId);
+    let enrichedText = text;
+    if (pendingImage) {
+      enrichedText =
+        `[A photo was just uploaded to Cloudinary before this message. ` +
+        `Cloudinary publicId: "${pendingImage.publicId}", URL: ${pendingImage.url}. ` +
+        `The owner's message below likely refers to this image — use it for CREATE_PRODUCT (set image field to the publicId) or UPDATE_IMAGE as appropriate.]\n\n` +
+        text;
+      // Clear pending image so it's only used once
+      data = clearPendingImage(data, chatId);
+    }
+
     let rawReply;
     try {
-      rawReply = await askAI(text, context, history);
+      rawReply = await askAI(enrichedText, context, history);
     } catch (aiErr) {
       console.error('AI call failed:', aiErr.message);
       await sendMessage(chatId, `⚠️ I'm having trouble reaching the AI right now — give it a few seconds and try again!`);
@@ -379,16 +409,17 @@ async function handlePhotoMessage(chatId, photos, caption) {
     const filename = `tg_${Date.now()}.${ext}`;
     const { publicId, url } = await uploadToCloudinary(buffer, filename);
 
-    // If caption mentions a product name, update that product's image
-    const data = await getBinData();
+    // Load data to check for product match and save pending image
+    let data = await getBinData();
     const products = Array.isArray(data.products) ? data.products : [];
 
+    // If caption mentions a product name, auto-update that product's image
     if (caption) {
       const captionLower = caption.toLowerCase();
       const matchIdx = products.findIndex(
         (p) =>
           captionLower.includes(p.name.toLowerCase()) ||
-          captionLower.includes(p.brand?.toLowerCase() ?? '')
+          captionLower.includes((p.brand ?? '').toLowerCase())
       );
 
       if (matchIdx !== -1) {
@@ -403,15 +434,16 @@ async function handlePhotoMessage(chatId, photos, caption) {
       }
     }
 
-    // No product matched — give them the Cloudinary ID so they can assign it themselves
+    // No product matched — store as pending image so next text message can use it
+    data = savePendingImage(data, chatId, { publicId, url });
+    await updateBinData(data);
+
     await sendMessage(
       chatId,
-      `✅ *Image uploaded successfully!*\n\n` +
-      `🔗 ${url}\n\n` +
-      `*Cloudinary ID:* \`${publicId}\`\n\n` +
+      `✅ *Image uploaded!*\n\n🔗 ${url}\n\n` +
       (caption
-        ? `I couldn't match "${caption}" to a product name. Tell me which product this belongs to and I'll update it — e.g. _"set image of Rose Oud to ${publicId}"_`
-        : `No caption detected. Tell me which product this image belongs to — e.g. _"this photo is for Rose Oud"_`)
+        ? `I couldn't match _"${caption}"_ to an existing product. Just tell me — is this for a new product or an existing one? Give me the name, price, stock and any other details and I'll sort it out.`
+        : `Now just tell me what product this is for — name, price, stock, anything you know. I'll create or update it right away.`)
     );
   } catch (err) {
     console.error('Photo upload error:', err);
