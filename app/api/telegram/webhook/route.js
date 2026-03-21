@@ -255,7 +255,14 @@ export async function POST(request) {
     const context = buildContext(data);
 
     // ── Ask AI (with memory) ─────────────────────────────────────────────────
-    const rawReply = await askAI(text, context, history);
+    let rawReply;
+    try {
+      rawReply = await askAI(text, context, history);
+    } catch (aiErr) {
+      console.error('AI call failed:', aiErr.message);
+      await sendMessage(chatId, `⚠️ I'm having trouble reaching the AI right now — the model is a bit busy. Give it a few seconds and try again!`);
+      return NextResponse.json({ ok: true });
+    }
 
     // ── Parse & apply all CRUD actions ───────────────────────────────────────
     const { results, updatedData } = parseAndApplyActions(rawReply, data);
